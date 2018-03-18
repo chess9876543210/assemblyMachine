@@ -1,0 +1,191 @@
+
+<html>
+<head>
+<style>
+div.outDiv { padding: 20px; min-width: 150px; float:left; font-family: monospace; }
+#errorOut { color: red; }
+.droparea:-moz-drag-over { border: 1px solid black; }
+</style>
+<script type="text/javascript" src="assemblyMachine.js"></script>
+<script>
+function init() {
+    m = new machine();
+    setButtonState();
+    
+    if (window.File && window.FileReader && window.FileList && window.Blob) { //file support
+        document.getElementById("loadFileDiv").hidden = false;
+        document.getElementById('loadFileInput').addEventListener('change', handleFileSelect, false);
+    }
+    
+    // allow tab input
+    document.getElementById("program").onkeydown = function(e){
+        if(e.keyCode==9 || e.which==9){
+            e.preventDefault();
+            var s = this.selectionStart;
+            this.value = this.value.substring(0,this.selectionStart) + "\t" + this.value.substring(this.selectionEnd);
+            this.selectionEnd = s+1; 
+        }
+    }
+}
+
+function onError(err) {
+    document.getElementById("errorOut").innerText = (err != null && err.message != null) ? err.message : "Script error";
+}
+
+function clearError() {
+    document.getElementById("errorOut").innerText = "";
+}
+
+function load() {
+    clearError();
+    try {
+        m.load(document.getElementById("program").value);
+    }
+    catch(err) {
+        onError(err);
+    }
+    setButtonState() 
+    update();
+}
+
+function run() {
+    clearError();
+    try {
+        m.run();
+    }
+    catch(err) {
+        onError(err);
+    }
+    update();
+}
+
+function step() {
+    clearError();
+    try {
+        m.next();
+    }
+    catch(err) {
+        onError(err);
+    }
+    update();
+}
+
+function update() {
+    document.getElementById("code").value = m.getProgramStatus().join("\n");
+    document.getElementById("out1").innerHTML = m.getAluStatus().join("<br/>");
+    document.getElementById("out2").innerHTML = m.getMemoryStatus().join("<br/>");
+}
+
+function setButtonState() {
+    document.getElementById("runButton").hidden = m.program.length < 1;
+    document.getElementById("stepButton").hidden = m.program.length < 1;
+}
+
+function dropHandler(evt) {
+    evt.preventDefault();
+    if (evt.dataTransfer.items) {
+        if (evt.dataTransfer.items.length > 1) {
+            alert("Cannot open multiple files");
+        } else {
+            if (evt.dataTransfer.items[0].kind === 'file') {
+                readFile(evt.dataTransfer.items[0].getAsFile());
+            }
+        }
+            
+    } else {
+        if (evt.dataTransfer.files.length > 1) {
+            alert("Cannot open multiple files");
+        } else {
+            readFile(evt.dataTransfer.files[0]);
+        }
+    }
+  
+  if (evt.dataTransfer.items) {
+      evt.dataTransfer.items.clear();
+  } else {
+      evt.dataTransfer.clearData();
+  }
+}
+
+function dragOverHandler(evt) {
+  evt.preventDefault();
+}
+
+function handleFileSelect(evt) {
+    readFile(evt.target.files[0]);
+}
+
+function readFile(file) {
+    var reader = new FileReader();
+    reader.onloadend = (function(tfile) {
+        return function(e) {
+            loadFile(e.currentTarget.result);
+        };
+    })(file);
+    reader.readAsText(file);
+}
+
+function loadFile(text) {
+    document.getElementById("program").value = text;
+}
+
+function saveFile() {
+    var filename = "program.txt";
+    var data = document.getElementById("program").value;
+    var blob = new Blob([data], {type: 'text/plain'});
+    if(window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+    }
+    else{
+        var elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(blob);
+        elem.download = filename;        
+        document.body.appendChild(elem);
+        elem.click();        
+        document.body.removeChild(elem);
+        window.URL.revokeObjectURL(elem.href);
+    }
+}
+</script>
+</head>
+<body onload="init()">
+<h1>Mini Assembly Machine</h1>
+<div id="loadFileDiv" hidden="true">
+  <input type="file" id="loadFileInput" name="file"/>
+  <button id="saveFileButton" onclick="saveFile()">Save File</button>
+  <br/>
+  <br/>
+</div>
+<div id="drop_zone" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+<textarea id="program" cols="40" rows="20">
+	LOAD	input
+loop:	STORE	tmp
+	MUL 	fac
+	STORE	fac
+	LOAD	tmp
+	SUBI	1
+	JMPP	loop
+	HOLD	
+
+input:	WORD	4
+tmp:	WORD	0
+fac:	WORD	1
+</textarea>
+<button id="loadButton" onclick="load()">COMPILE >></button>
+
+<textarea id="code" cols="40" rows="20" readonly>
+</textarea>
+</div>
+
+<br/>
+<button id="runButton" onclick="run()">RUN</button>
+
+<button id="stepButton" onclick="step()">STEP</button>
+
+<span id="errorOut"></span>
+<br/>
+<div id="out1" class="outDiv"></div>
+<div id="out2" class="outDiv"></div>
+
+</body>
+</html>

@@ -1,2 +1,2 @@
 # assemblyMachine
-basic simulation
+basic simulation of simple assembly machine with web interface

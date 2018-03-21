@@ -142,22 +142,14 @@ function alu() {
         this.ShlI(this.getMemory(addr));
     }
     this.ShrI = function(value) {
-        this.setAccuWithOverflow(this.accu>>value)
+        this.setAccuWithOverflow(this.accu>>>value)
         this.programPointer++;
     }
     this.Shr = function(addr) {
         this.ShrI(this.getMemory(addr));
     }
     this.ShraI = function(value) {
-        var tmpaccu = this.accu;
-        var isPositive = tmpaccu >= 0;
-        for (var i = 0; i < value; i ++) {
-            // todo: test
-            tmpaccu >> 1;
-            if (!isPositive)
-                tmpaccu |= (1 << 32);
-        }
-        this.setAccuWithOverflow(tmpaccu)
+        this.setAccuWithOverflow(this.accu>>value)
         this.programPointer++;
     }
     this.Shra = function(addr) {

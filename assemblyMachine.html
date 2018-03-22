@@ -12,7 +12,10 @@ function init() {
     m = new machine();
     setButtonState();
     
-    if (window.File && window.FileReader && window.FileList && window.Blob) { //file support
+    binaryNumbersToggled=false;
+    
+    //file support
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
         document.getElementById("loadFileDiv").hidden = false;
         document.getElementById('loadFileInput').addEventListener('change', handleFileSelect, false);
     }
@@ -75,12 +78,37 @@ function update() {
     document.getElementById("out1").innerHTML = m.getAluStatus().join("<br/>");
     document.getElementById("out2").innerHTML = m.getMemoryStatus().join("<br/>");
 }
+function toggleBinaryNumbers() {
+    if (binaryNumbersToggled) {
+        var o1 = m.getAluStatus();
+        for (var i = 0; i < o1.length; i ++) {
+            var line = o1[i].split(" ");
+            line[1] = Number(line[1]).toString(2);
+            o1[i] = line.join(" ");
+        }
+        document.getElementById("out1").innerHTML = o1.join("<br/>");
+        
+        var o2 = m.getMemoryStatus();
+        for (var i = 0; i < o2.length; i ++) {
+            var line = o2[i].split("\t");
+            line[1] = Number(line[1]).toString(2);
+            o2[i] = line.join(" ");
+        }
+        document.getElementById("out2").innerHTML = o2.join("<br/>");
+    } else {
+        update();
+    }
+    
+    binaryNumbersToggled = !binaryNumbersToggled;
+}
 
 function setButtonState() {
     document.getElementById("runButton").hidden = m.program.length < 1;
     document.getElementById("stepButton").hidden = m.program.length < 1;
+    document.getElementById("toggleBinaryButton").hidden = m.program.length < 1;
 }
 
+//file load (drag and drop)
 function dropHandler(evt) {
     evt.preventDefault();
     if (evt.dataTransfer.items) {
@@ -129,6 +157,7 @@ function loadFile(text) {
     document.getElementById("program").value = text;
 }
 
+//download as file
 function saveFile() {
     var filename = "program.txt";
     var data = document.getElementById("program").value;
@@ -181,6 +210,8 @@ fac:	WORD	1
 <button id="runButton" onclick="run()">RUN</button>
 
 <button id="stepButton" onclick="step()">STEP</button>
+
+<button id="toggleBinaryButton" onclick="toggleBinaryNumbers()">Toggle format</button>
 
 <span id="errorOut"></span>
 <br/>

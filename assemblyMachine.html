@@ -75,8 +75,8 @@ function step() {
 
 function update() {
     document.getElementById("code").value = m.getProgramStatus().join("\n");
-    document.getElementById("out1").innerHTML = m.getAluStatus().join("<br/>");
-    document.getElementById("out2").innerHTML = m.getMemoryStatus().join("<br/>");
+    binaryNumbersToggled = !binaryNumbersToggled;
+    toggleBinaryNumbers();
 }
 function toggleBinaryNumbers() {
     if (binaryNumbersToggled) {
@@ -96,7 +96,8 @@ function toggleBinaryNumbers() {
         }
         document.getElementById("out2").innerHTML = o2.join("<br/>");
     } else {
-        update();
+        document.getElementById("out1").innerHTML = m.getAluStatus().join("<br/>");
+        document.getElementById("out2").innerHTML = m.getMemoryStatus().join("<br/>");
     }
     
     binaryNumbersToggled = !binaryNumbersToggled;
